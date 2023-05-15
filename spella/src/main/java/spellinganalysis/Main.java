@@ -50,8 +50,12 @@ public class Main {
     private static String getText(final File pdf) throws IOException {
         try (final PDDocument document = PDDocument.load(pdf)) {
             final PDFTextStripper pdfStripper = new PDFTextStripper();
-            return pdfStripper.getText(document);
+            return Main.sanitizeText(pdfStripper.getText(document));
         }
+    }
+
+    private static String sanitizeText(final String text) {
+        return text.replaceAll("-[\\r\\n]+(?=[a-z])", "").replaceAll("-[\\r\\n]+", "-");
     }
 
 }
