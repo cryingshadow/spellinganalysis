@@ -19,7 +19,8 @@ public class MainTest {
         final String outputPath = inputPath.substring(0, inputPath.length() - 8) + "output.txt";
         Main.main(new String[] {inputPath, outputPath});
         try (BufferedReader reader = new BufferedReader(new FileReader(new File(outputPath)))) {
-            Assert.assertEquals(reader.readLine(), "Rehctschreibfehler");
+            Assert.assertEquals(reader.readLine(), "//////// Seite 1: ////////");
+            Assert.assertEquals(reader.readLine(), "Rehctschreibfehler"); // (7)
         }
     }
 
