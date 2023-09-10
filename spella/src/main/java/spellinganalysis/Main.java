@@ -21,7 +21,10 @@ public class Main {
             final List<String> pages = Main.getPages(input);
             int page = 1;
             for (final String text : pages) {
-                final List<String> errors = Main.getErrors(text, new GermanyGerman());
+                final List<String> errors =
+                    new ArrayList<String>(
+                        Main.getErrors(text, new GermanyGerman()).stream().filter(s -> s.length() > 2).toList()
+                    );
                 errors.retainAll(Main.getErrors(text, new AmericanEnglish()));
                 errors.retainAll(Main.getErrors(text, new BritishEnglish()));
                 errors.removeAll(personalDictionary);
@@ -41,18 +44,14 @@ public class Main {
     }
 
     private static List<String> getErrors(final String text, final Language language) throws IOException {
-        final List<String> errors = new LinkedList<String>();
         final JLanguageTool langTool = new JLanguageTool(language);
         for (final Rule rule : langTool.getAllRules()) {
             if (!rule.isDictionaryBasedSpellingRule()) {
                 langTool.disableRule(rule.getId());
             }
         }
-        final List<RuleMatch> matches = langTool.check(text);
-        for (final RuleMatch match : matches) {
-            errors.add(text.substring(match.getFromPos(), match.getToPos()));
-        }
-        return errors;
+        return
+            langTool.check(text).stream().map(match -> text.substring(match.getFromPos(), match.getToPos())).toList();
     }
 
     private static List<String> getPages(final File input) throws IOException {
