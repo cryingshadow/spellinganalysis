@@ -78,7 +78,17 @@ public class Main {
                 return result;
             }
         }
-        return List.of(Files.readString(input.toPath()).split("\f"));
+        return List.of(
+            Files
+            .readString(input.toPath())
+            .replaceAll("\uFB03", "ffi")
+            .replaceAll("\uFB04", "ffl")
+            .replaceAll("\uFB00", "ff")
+            .replaceAll("\uFB01", "fi")
+            .replaceAll("\uFB02", "fl")
+            .replaceAll("\uFB05", "ft")
+            .split("\f")
+        );
     }
 
     private static List<String> readPersonalDictionary(final String[] args) throws IOException {
