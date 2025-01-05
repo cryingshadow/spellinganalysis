@@ -42,7 +42,6 @@ jar {
     manifest {
         attributes 'Main-Class': 'spellinganalysis.Main'
     }
-    targetCompatibility = "1.17"
     archiveBaseName = 'spella'
     from { configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) } }
 }
