@@ -13,6 +13,9 @@ import org.languagetool.language.*;
 
 public class Main {
 
+    private static final boolean PAGINATION = false;
+
+    @SuppressWarnings("unused")
     public static void main(final String[] args) {
         final File input = new File(args[0]);
         final File output = new File(args[1]);
@@ -28,7 +31,7 @@ public class Main {
                 errors.retainAll(Main.getErrors(text, new AmericanEnglish()));
                 errors.retainAll(Main.getErrors(text, new BritishEnglish()));
                 errors.removeAll(personalDictionary);
-                if (!errors.isEmpty()) {
+                if (Main.PAGINATION && !errors.isEmpty()) {
                     writer.write(String.format("//////// Seite %d: ////////", page));
                     writer.newLine();
                 }
@@ -70,15 +73,12 @@ public class Main {
                     pdfStripper.setEndPage(i);
                     final String originalText = pdfStripper.getText(document);
                     final String sanitizedText = Main.sanitizeText(originalText);
-//                    if (!originalText.equals(sanitizedText)) {
-//                        System.out.println("foo");
-//                    }
                     result.add(sanitizedText);
                 }
                 return result;
             }
         }
-        return List.of(
+        final String replaced =
             Files
             .readString(input.toPath())
             .replaceAll("\uFB03", "ffi")
@@ -86,9 +86,11 @@ public class Main {
             .replaceAll("\uFB00", "ff")
             .replaceAll("\uFB01", "fi")
             .replaceAll("\uFB02", "fl")
-            .replaceAll("\uFB05", "ft")
-            .split("\f")
-        );
+            .replaceAll("\uFB05", "ft");
+        if (Main.PAGINATION) {
+            return List.of(replaced.split("\f"));
+        }
+        return List.of(replaced.replaceAll("\f", ""));
     }
 
     private static List<String> readPersonalDictionary(final String[] args) throws IOException {
