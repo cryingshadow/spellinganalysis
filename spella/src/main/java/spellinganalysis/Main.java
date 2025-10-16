@@ -3,6 +3,8 @@ package spellinganalysis;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.regex.*;
+import java.util.stream.*;
 
 import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.text.*;
@@ -12,6 +14,8 @@ import org.languagetool.language.*;
 
 
 public class Main {
+
+    private static final Pattern ABBREVIATION = Pattern.compile("\\p{javaUpperCase}\\p{javaUpperCase}+");
 
     private static final boolean PAGINATION = false;
 
@@ -41,9 +45,26 @@ public class Main {
                 }
                 page++;
             }
+            writer.newLine();
+            writer.write("Abkürzungen:");
+            writer.newLine();
+            for (final String text : pages) {
+                for (final String abbreviation : Main.getAbbreviations(text)) {
+                    writer.write(abbreviation);
+                    writer.newLine();
+                }
+            }
         } catch (final IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static Set<String> getAbbreviations(final String text) {
+        return Main.ABBREVIATION
+            .matcher(text)
+            .results()
+            .map(MatchResult::group)
+            .collect(Collectors.toCollection(TreeSet::new));
     }
 
     private static List<String> getErrors(final String text, final Language language) throws IOException {
