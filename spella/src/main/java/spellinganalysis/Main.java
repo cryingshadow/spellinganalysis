@@ -15,9 +15,9 @@ import org.languagetool.language.*;
 
 public class Main {
 
-    private static final Pattern ABBREVIATION = Pattern.compile("\\p{javaUpperCase}\\p{javaUpperCase}+");
+    public static final boolean PAGINATION = false;
 
-    private static final boolean PAGINATION = false;
+    private static final Pattern ABBREVIATION = Pattern.compile("\\p{javaUpperCase}\\p{javaUpperCase}+");
 
     @SuppressWarnings("unused")
     public static void main(final String[] args) {
@@ -50,7 +50,9 @@ public class Main {
             writer.newLine();
             for (final String text : pages) {
                 for (final String abbreviation : Main.getAbbreviations(text)) {
+                    writer.write("#");
                     writer.write(abbreviation);
+                    writer.write("#");
                     writer.newLine();
                 }
             }
