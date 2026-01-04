@@ -21,6 +21,9 @@ public class Main {
 
     @SuppressWarnings("unused")
     public static void main(final String[] args) {
+        if (args == null || args.length != 2) {
+            throw new IllegalArgumentException("Expected input and output file as arguments!");
+        }
         final File input = new File(args[0]);
         final File output = new File(args[1]);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(output))) {
