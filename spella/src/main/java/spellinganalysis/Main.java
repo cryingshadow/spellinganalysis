@@ -26,6 +26,9 @@ public class Main {
         }
         final File input = new File(args[0]);
         final File output = new File(args[1]);
+        final JLanguageTool de = Main.getTool(new GermanyGerman());
+        final JLanguageTool us = Main.getTool(new AmericanEnglish());
+        final JLanguageTool uk = Main.getTool(new BritishEnglish());
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(output))) {
             final List<String> personalDictionary = Main.readPersonalDictionary(args);
             final List<String> pages = Main.getPages(input);
@@ -33,16 +36,31 @@ public class Main {
             for (final String text : pages) {
                 final List<String> errors =
                     new ArrayList<String>(
-                        Main.getErrors(text, new GermanyGerman()).stream().filter(s -> s.length() > 2).toList()
+                        Main.getErrors(text, de).stream().filter(s -> s.length() > 2).toList()
                     );
-                errors.retainAll(Main.getErrors(text, new AmericanEnglish()));
-                errors.retainAll(Main.getErrors(text, new BritishEnglish()));
-                errors.removeAll(personalDictionary);
-                if (Main.PAGINATION && !errors.isEmpty()) {
+                errors.retainAll(Main.getErrors(text, us));
+                errors.retainAll(Main.getErrors(text, uk));
+                final List<String> splitErrors =
+                    errors
+                    .stream()
+                    .flatMap(word -> Arrays.stream(word.split("-")))
+                    .filter(
+                        word ->
+                        word.length() > 2
+                        && !personalDictionary.contains(word)
+                    ).toList();
+                final Iterator<String> iterator = splitErrors.iterator();
+                while (iterator.hasNext()) {
+                    final String error = iterator.next();
+                    if (de.check(error).isEmpty() || us.check(error).isEmpty() || uk.check(error).isEmpty()) {
+                        iterator.remove();
+                    }
+                }
+                if (Main.PAGINATION && !splitErrors.isEmpty()) {
                     writer.write(String.format("//////// Seite %d: ////////", page));
                     writer.newLine();
                 }
-                for (final String error : errors) {
+                for (final String error : splitErrors) {
                     writer.write(error);
                     writer.newLine();
                 }
@@ -72,15 +90,9 @@ public class Main {
             .collect(Collectors.toCollection(TreeSet::new));
     }
 
-    private static List<String> getErrors(final String text, final Language language) throws IOException {
-        final JLanguageTool langTool = new JLanguageTool(language);
-        for (final Rule rule : langTool.getAllRules()) {
-            if (!rule.isDictionaryBasedSpellingRule()) {
-                langTool.disableRule(rule.getId());
-            }
-        }
+    private static List<String> getErrors(final String text, final JLanguageTool tool) throws IOException {
         return
-            langTool.check(text).stream().map(match -> text.substring(match.getFromPos(), match.getToPos())).toList();
+            tool.check(text).stream().map(match -> text.substring(match.getFromPos(), match.getToPos())).toList();
     }
 
     private static List<String> getPages(final File input) throws IOException {
@@ -117,6 +129,16 @@ public class Main {
             return List.of(replaced.split("\f"));
         }
         return List.of(replaced.replaceAll("\f", ""));
+    }
+
+    private static JLanguageTool getTool(final Language language) {
+        final JLanguageTool tool = new JLanguageTool(language);
+        for (final Rule rule : tool.getAllRules()) {
+            if (!rule.isDictionaryBasedSpellingRule()) {
+                tool.disableRule(rule.getId());
+            }
+        }
+        return tool;
     }
 
     private static List<String> readPersonalDictionary(final String[] args) throws IOException {
